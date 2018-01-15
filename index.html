@@ -1,0 +1,193 @@
+<html>
+    <head>
+        <title>CoinMarketCap Dashboard</title>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> 
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script id="cmc-script" type="text/javascript" src="https://files.coinmarketcap.com/static/widget/currency.js"></script>
+
+        <style>
+            body {
+                font-family: "Roboto";
+            }
+            .main-row {
+                background-color: #f9f9f9;
+                padding: 2em 0;
+                border-top: 2px solid #ebebeb;
+                border-bottom: 2px solid #ebebeb;
+                margin-bottom: 2em;
+            }
+            .right-header{
+                padding: 1em;
+                color: #666;
+            }
+            .currencies {
+                text-align: right;
+            }
+            .total{
+                font-size: 2.4em;
+                color: #444;
+                text-align: center;
+                margin: auto;
+            }
+            .currencies ul li {
+                display: inline-block;
+                border-right: 1px solid #ebebeb;
+                padding: 0px 10px 0px 5px;
+            }
+            .coinmarketcap-currency-widget {
+                margin: 10px 0px;
+            }
+            @media (max-width: 768px) {
+                h1 {
+                    text-align:center; 
+                    border-bottom: 1px solid #ebebeb;
+                    padding-bottom:1em;
+                }
+                .currencies ul {
+                    padding-left: 0;
+                }
+                .currencies ul li {
+                    text-align: center; 
+                    display: block; 
+                    line-height: 1.5em;
+                    padding: 0; 
+                    margin:0; 
+                    border: none;
+                }
+                .coinmarketcap-currency-widget {
+                    margin: 20px 0px;
+                }
+                .main-row {
+                    padding: 1em 0;
+                    margin-bottom: 1em;
+                }
+                .total {
+                    padding-top: 0.5em;
+                }
+            }
+        </style>
+
+        <script>
+
+            // CONFIG //
+            /*-------------------------------------------------------*/
+            var mainColWidth = 3;
+            var mainCurrencies = [ 'bitcoin', 'ethereum', 'ripple', 'stellar' ];
+
+            var otherColWidth = 3;
+            var otherCurrencies = [ 
+                'raiblocks',
+                'verge',
+                'cardano',
+                'tron',
+                'nxt',
+                'siacoin',
+                'monero',
+                'nem',
+                'bytecoin-bcn',
+                'iota',
+                'litecoin',
+                'lisk',
+                'bitshares',
+                'stratis',
+                'steem',
+            ];
+            
+            var myCurrencies = {
+                'bitcoin': 1.142001,
+                'ethereum': 1.016501,
+                'ripple': 160.123,
+                'stellar': 1000,
+                'verge': 123.123,
+                'request-network': 456.4560000,
+            };
+
+            // CONFIG END //
+            /*-------------------------------------------------------*/
+
+            function updateDashboard(mainColWidth, mainCurrencies, otherColWidth, otherCurrencies) {
+                $('.main-row').html('');
+                for (var i = 0; i < mainCurrencies.length; i++) {
+                    $('.main-row').append('<div class="coinmarketcap-currency-widget col-md-' + mainColWidth + '" data-currency="' + mainCurrencies[i] + '" data-base="EUR" data-secondary="USD" data-ticker="true" data-rank="true" data-marketcap="true" data-volume="true" data-stats="EUR" data-statsticker="false"></div>');
+                }
+
+                $('.other-row').html('');
+                for (var i = 0; i < otherCurrencies.length; i++) {
+                    $('.other-row').append('<div class="coinmarketcap-currency-widget col-md-' + otherColWidth + '" data-currency="' + otherCurrencies[i] + '" data-base="EUR" data-secondary="USD" data-ticker="true" data-rank="true" data-marketcap="true" data-volume="true" data-stats="EUR" data-statsticker="false"></div>');
+                }
+
+                $('#cmc-script').replaceWith('<script id="cmc-script" type="text/javascript" src="' + $('#cmc-script').prop('src') + '"><\/script>');
+            }
+
+            function updateMyCurrencies(myCurrencies) {
+                var total = 0;
+                $('.currencies-list').html('');
+                for (var currency in myCurrencies) {
+                    $.ajax({
+                        url: 'https://api.coinmarketcap.com/v1/ticker/' + currency + '/?convert=EUR',
+                        type: "GET",
+                        dataType: "JSON",
+                        async: false,
+                        success: function(data) {
+                            $('.currencies-list').append('<li data-value="' + ( myCurrencies[currency] * data[0].price_eur ) + '"><u>' + data[0].symbol + '</u> <span style="font-size:11px;">(' + myCurrencies[currency]+ ')</span> = ' + Number(( myCurrencies[currency] * data[0].price_eur ).toFixed(6)) + '</li>');
+                        }
+                    });
+                }
+
+                $( ".currencies-list li" ).each(function( index ) {
+                    total += parseFloat(this.getAttribute('data-value'));
+                });
+
+                $('.total').html(Number(total.toFixed(4)) + ' EUR');
+            }
+
+            $(document).ready(function () {
+
+                updateDashboard(mainColWidth, mainCurrencies, otherColWidth, otherCurrencies);
+                updateMyCurrencies(myCurrencies);
+
+                window.setInterval(function(){
+                    updateMyCurrencies(myCurrencies);
+                }, 60000);
+
+                window.setInterval(function(){
+                    updateDashboard(mainColWidth, mainCurrencies, otherColWidth, otherCurrencies);
+                }, 300000);
+                
+            });
+           
+        </script>
+    </head>
+    <body>
+        <div class="container-fluid">
+         
+          <div class="row">
+              <div class="col-md-4" id="coin">
+                  <h1>My Cryptboard</h1>       
+              </div>
+
+              <div class="col-md-8 right-header">
+                  <div class="row">
+                      <div class="col-md-8 currencies">
+                          <ul class="currencies-list">
+                            <li>Loading...</li>
+                          </ul>
+                      </div>
+                      <div class="col-md-4 total">
+                          00.000 EUR
+                      </div>
+                  </div>
+              </div>
+          </div>
+         
+          <div class="row main-row"></div>
+          <div class="row other-row"></div>
+
+        </div>
+    </body>
+</html>
